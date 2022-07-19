@@ -39,7 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     #apps created by me
-    'auth',
+    'account',
+
+
+    #third party apps
+    'django_countries',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -82,6 +87,9 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+
+AUTH_USER_MODEL = 'account.CustomUser'
 
 
 # Password validation
