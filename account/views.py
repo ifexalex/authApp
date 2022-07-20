@@ -9,7 +9,6 @@ from helpers.SendEmail import send_mail
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from helpers.sendinblue import sendbluein
 
 from .serializers import *
 
@@ -17,8 +16,12 @@ User = get_user_model()
 
 
 class RegisterUserViewset(viewsets.ModelViewSet):
+   
     """
-    A viewset for creating users.
+    The function creates a new user and returns a success message
+    
+    :param request: The request object
+    :return: A response object.
     """
     serializer_class = RegisterUserSerializer
     permission_classes = [permissions.AllowAny]
@@ -41,9 +44,16 @@ class RegisterUserViewset(viewsets.ModelViewSet):
 
 
 class LoginUserViewset(viewsets.ModelViewSet):
-    http_method_names = ["post"]
+    
+    """
+        It takes the email and password from the request, checks if the user exists, and if so, returns the
+        access and refresh tokens
+        
+        :param request: The request object
+    """
 
     serializer_class = LoginUserSerializer
+    http_method_names = ["post"]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -99,7 +109,7 @@ class SendPasswordResetLinkViewSet(viewsets.ModelViewSet):
             {
                 "code": status.HTTP_200_OK,
                 "status": "success",
-                "message": "Password reset link sent successfully",
+                "message": "Password reset link has been sent to your email",
             },
             status=status.HTTP_200_OK,
         )
