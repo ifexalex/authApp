@@ -41,16 +41,17 @@ class RegisterUserViewset(viewsets.ModelViewSet):
 
 
 class LoginUserViewset(viewsets.ModelViewSet):
+    http_method_names = ["post"]
 
     serializer_class = LoginUserSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+    
         user = User.objects.get(email=serializer.data["email"])
-        refresh_token = RefreshToken.for_user(user)
-        access_token = str(refresh_token.access_token)
+        refresh_token = str(RefreshToken.for_user(user))
+        access_token = str(RefreshToken.for_user(user).access_token)
 
         return Response(
             {

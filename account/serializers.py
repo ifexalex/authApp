@@ -10,17 +10,12 @@ User = get_user_model()
 
 class RegisterUserSerializer(serializers.ModelSerializer):
 
-    password = serializers.CharField(
-        style={"input_type": "password"},
-        write_only=True,
-        required=True,
-        help_text="Password",
-    )
-    confirm_password = serializers.CharField(
-        style={"input_type": "password"},
-        required=True, 
-        help_text="Password",
-    )
+
+    # confirm_password = serializers.CharField(
+    #     style={"input_type": "password"},
+    #     required=True, 
+    #     help_text="Password",
+    # )
 
     class Meta:
         model = User
@@ -35,6 +30,10 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "password",
             "confirm_password",
         ]
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "confirm_password": {"write_only": False},
+        }
 
     def create(self, validated_data):
         if validated_data.get("phone_number", None) is not None:
@@ -62,22 +61,28 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
 
 
-class LoginUserSerializer(serializers.ModelSerializer):
+class LoginUserSerializer(serializers.Serializer):
     # def validate(self, attrs):
     #     data = super().validate(attrs)
     #     data["user"] = User.objects.get(email=data["email"])
     #     return data
 
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(
+        style={"input_type": "password"},
+        required=True,
+        help_text="Password",
+    )
+
     class Meta:
-        model = User
         fields = ("email", "password")
 
     def validate(self, data):
         user_obj = User.objects.filter(email=data["email"]).first()
         if user_obj is None:
-            raise serializers.ValidationError("User does not exist")
+            raise serializers.ValidationError("User with the given email does not exist")
         if not user_obj.check_password(data["password"]):
-            raise serializers.ValidationError("Password is incorrect")
+            raise serializers.ValidationError("Invalid email or password")
         return data
 
 
