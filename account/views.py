@@ -1,3 +1,4 @@
+from audioop import reverse
 import base64
 from os import access
 
@@ -109,7 +110,7 @@ class SendPasswordResetLinkViewSet(viewsets.ModelViewSet):
         user = User.objects.get(email=email)
 
         current_site = get_current_site(self.request).domain
-        relative_url = "/password/reset/confirm/"
+        relative_url =  reverse("reset-password", kwargs={"token": user.reset_password_token})
         token = RefreshToken.for_user(user).access_token
         user_id = str(user.id).encode("ascii")
         user_id_encoded = base64.b64encode(user_id).decode("ascii")
@@ -119,12 +120,15 @@ class SendPasswordResetLinkViewSet(viewsets.ModelViewSet):
         context = {
             "password_reset_url": absolute_url,
             "first_name": user.first_name,
+            "current_site": current_site,
+            "uid": user_id_encoded,
+            "token": token,
         }
 
         send_mail(
             "Password Reset",
             "password_reset.html",
-            "Auth App <djangotestmail1593@gmail.com>",
+            "Auth App <noreply@gmail.com>",
             [user.email],
             context,
         )
@@ -158,11 +162,26 @@ class PasswordResetConfirmViewSet(viewsets.ModelViewSet):
             uid = serializer.validated_data["uid"]
             password = serializer.validated_data["password"]
 
+            current_site = get_current_site(self.request).domain
+            absolute_url = f"http://{current_site}/api/login/"
+
             decoded_user_id = base64.b64decode(uid).decode("ascii")
+
             try:
                 # The below code is decoding the token and validating it using the secret key.
                 payload = jwt.decode(token, settings.SECRET_KEY, algorithms="HS512")
-                user = User.objects.get(id=payload["user_id"])
+                try:
+
+                    user = User.objects.get(id=decoded_user_id)
+                except User.DoesNotExist:
+                    return Response(
+                        {
+                            "code": status.HTTP_404_NOT_FOUND,
+                            "status": "Failed",
+                            "message": "invalid uid",
+                        },
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
 
                 if user.is_active:
                     user.set_password(password)
@@ -187,11 +206,12 @@ class PasswordResetConfirmViewSet(viewsets.ModelViewSet):
                 )
             context = {
                 "first_name": user.first_name,
+                "absolute_url": absolute_url,
             }
             send_mail(
                 "Password Reset Successful",
                 "success_password_reset.html",
-                "Auth App <djangotestmail1593@gmail.com>",
+                "Auth App <noreply@gmail.com>",
                 [user.email],
                 context,
             )

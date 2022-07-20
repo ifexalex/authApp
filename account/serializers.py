@@ -139,13 +139,23 @@ class SendPasswordResetLinkSerializer(serializers.ModelSerializer):
 class ConfirmUserPasswordReset(serializers.ModelSerializer):
     uid = serializers.CharField(required=True)
     token = serializers.CharField(required=True)
+
     password = serializers.CharField(
         style={"input_type": "password"},
         required=True,
         help_text="Password",
     )
-    re_password = serializers.CharField(
+    confirm_password = serializers.CharField(
         style={"input_type": "password"},
         required=True,
         help_text="confirm Password",
     )
+
+    class Meta:
+        model = User
+        fields = ["uid", "token", "password", "confirm_password"]
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords do not match")
+        return data
