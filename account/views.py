@@ -1,4 +1,3 @@
-from audioop import reverse
 import base64
 from os import access
 
@@ -110,17 +109,16 @@ class SendPasswordResetLinkViewSet(viewsets.ModelViewSet):
         user = User.objects.get(email=email)
 
         current_site = get_current_site(self.request).domain
-        relative_url =  reverse("password-reset", kwargs={"token": user.reset_password_token})
+        relative_url = "api/password-reset-confirm/"
         token = RefreshToken.for_user(user).access_token
         user_id = str(user.id).encode("ascii")
         user_id_encoded = base64.b64encode(user_id).decode("ascii")
 
-        absolute_url = f"http://{current_site}{relative_url}{user_id_encoded}/{token}"
+        absolute_url = f"http://{current_site}/{relative_url}"
 
         context = {
             "password_reset_url": absolute_url,
             "first_name": user.first_name,
-            "current_site": current_site,
             "uid": user_id_encoded,
             "token": token,
         }
