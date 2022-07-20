@@ -1,1 +1,1 @@
-web: gunicorn Core.wsgi --log-file -
+web: gunicorn authApp.wsgi --log-file -
